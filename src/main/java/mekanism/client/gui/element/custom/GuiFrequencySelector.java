@@ -43,6 +43,7 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
     private final IGuiFrequencySelector<FREQ> frequencySelector;
     private final MekanismButton publicButton;
     private final MekanismButton privateButton;
+    private final MekanismButton trustedButton;
     private final MekanismButton setButton;
     private final MekanismButton deleteButton;
     private final GuiTextScrollList scrollList;
@@ -52,6 +53,7 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
     // each time things are synced currently so that we can just do an identity compare
     private List<FREQ> lastFrequencies = Collections.emptyList();
     private boolean publicFreq = true;
+    private boolean trustedFreq = false;
     private boolean init;
 
     public <SELECTOR extends IGuiWrapper & IGuiFrequencySelector<FREQ>> GuiFrequencySelector(SELECTOR frequencySelector, int yStart) {
@@ -60,13 +62,21 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
         this.yStart = yStart;
         boolean hasColor = frequencySelector instanceof IGuiColorFrequencySelector;
         scrollList = addChild(new GuiTextScrollList(frequencySelector, 27, yStart + 22, 122, 42));
-        publicButton = addChild(new TranslationButton(frequencySelector, 27, yStart, 60, 20, APILang.PUBLIC, () -> {
+        publicButton = addChild(new TranslationButton(frequencySelector, 27, yStart, 39, 20, APILang.PUBLIC, () -> {
             this.publicFreq = true;
+            this.trustedFreq = false;
             this.scrollList.clearSelection();
             updateButtons();
         }));
-        privateButton = addChild(new TranslationButton(frequencySelector, 89, yStart, 60, 20, APILang.PRIVATE, () -> {
+        privateButton = addChild(new TranslationButton(frequencySelector, 68, yStart, 39, 20, APILang.PRIVATE, () -> {
             this.publicFreq = false;
+            this.trustedFreq = false;
+            this.scrollList.clearSelection();
+            updateButtons();
+        }));
+        trustedButton = addChild(new TranslationButton(frequencySelector, 109, yStart, 39, 20, APILang.TRUSTED, () -> {
+            this.publicFreq = false;
+            this.trustedFreq = true;
             this.scrollList.clearSelection();
             updateButtons();
         }));
@@ -150,9 +160,15 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
         if (publicFreq) {
             publicButton.active = false;
             privateButton.active = true;
+            trustedButton.active = true;
+        } else if (trustedFreq) {
+            publicButton.active = true;
+            privateButton.active = true;
+            trustedButton.active = false;
         } else {
             publicButton.active = true;
             privateButton.active = false;
+            trustedButton.active = true;
         }
         if (scrollList.hasSelection()) {
             FREQ selectedFrequency = frequencies.get(scrollList.getSelection());
@@ -182,7 +198,7 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
 
     private void setFrequency(String freq) {
         if (!freq.isEmpty()) {
-            frequencySelector.sendSetFrequency(new FrequencyIdentity(freq, publicFreq));
+            frequencySelector.sendSetFrequency(new FrequencyIdentity(freq, publicFreq, trustedFreq));
         }
     }
 

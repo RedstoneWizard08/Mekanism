@@ -25,6 +25,7 @@ public abstract class Frequency implements IFrequency {
 
     private boolean valid = true;
     private boolean publicFreq;
+    private boolean trustedFreq;
 
     private final FrequencyType<?> frequencyType;
 
@@ -82,7 +83,7 @@ public abstract class Frequency implements IFrequency {
     public final SecurityMode getSecurity() {
         //TODO: Eventually we may want to allow for protected frequencies, at which point instead of
         // storing a boolean publicFreq we would just store the security mode
-        return isPublic() ? SecurityMode.PUBLIC : SecurityMode.PRIVATE;
+        return isPublic() ? SecurityMode.PUBLIC : isTrusted() ? SecurityMode.TRUSTED : SecurityMode.PRIVATE;
     }
 
     public boolean isPublic() {
@@ -94,6 +95,30 @@ public abstract class Frequency implements IFrequency {
             publicFreq = isPublic;
             dirty = true;
         }
+
+        if (trustedFreq) {
+            trustedFreq = false;
+            dirty = true;
+        }
+
+        return this;
+    }
+
+    public boolean isTrusted() {
+        return trustedFreq;
+    }
+
+    public Frequency setTrusted(boolean isTrusted) {
+        if (trustedFreq != isTrusted) {
+            trustedFreq = isTrusted;
+            dirty = true;
+        }
+
+        if (publicFreq) {
+            publicFreq = false;
+            dirty = true;
+        }
+
         return this;
     }
 
@@ -131,6 +156,7 @@ public abstract class Frequency implements IFrequency {
             nbtTags.putUUID(NBTConstants.OWNER_UUID, ownerUUID);
         }
         nbtTags.putBoolean(NBTConstants.PUBLIC_FREQUENCY, publicFreq);
+        nbtTags.putBoolean(NBTConstants.TRUSTED_FREQUENCY, trustedFreq);
     }
 
     public void write(CompoundTag nbtTags) {
@@ -141,6 +167,7 @@ public abstract class Frequency implements IFrequency {
         name = nbtTags.getString(NBTConstants.NAME);
         NBTUtils.setUUIDIfPresent(nbtTags, NBTConstants.OWNER_UUID, uuid -> ownerUUID = uuid);
         publicFreq = nbtTags.getBoolean(NBTConstants.PUBLIC_FREQUENCY);
+        trustedFreq = nbtTags.getBoolean(NBTConstants.TRUSTED_FREQUENCY);
     }
 
     public void write(FriendlyByteBuf buffer) {
@@ -149,6 +176,7 @@ public abstract class Frequency implements IFrequency {
         BasePacketHandler.writeOptional(buffer, ownerUUID, FriendlyByteBuf::writeUUID);
         buffer.writeUtf(MekanismUtils.getLastKnownUsername(ownerUUID));
         buffer.writeBoolean(publicFreq);
+        buffer.writeBoolean(trustedFreq);
     }
 
     protected void read(FriendlyByteBuf dataStream) {
@@ -156,6 +184,7 @@ public abstract class Frequency implements IFrequency {
         ownerUUID = BasePacketHandler.readOptional(dataStream, FriendlyByteBuf::readUUID);
         clientOwner = BasePacketHandler.readString(dataStream);
         publicFreq = dataStream.readBoolean();
+        trustedFreq = dataStream.readBoolean();
     }
 
     /**
@@ -179,11 +208,11 @@ public abstract class Frequency implements IFrequency {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Frequency other && publicFreq == other.publicFreq && ownerUUID != null && name.equals(other.name) && ownerUUID.equals(other.ownerUUID);
+        return obj instanceof Frequency other && publicFreq == other.publicFreq && trustedFreq == other.trustedFreq && ownerUUID != null && name.equals(other.name) && ownerUUID.equals(other.ownerUUID);
     }
 
     public FrequencyIdentity getIdentity() {
-        return new FrequencyIdentity(getKey(), publicFreq);
+        return new FrequencyIdentity(getKey(), publicFreq, trustedFreq);
     }
 
     public boolean areIdentitiesEqual(Frequency other) {
@@ -210,7 +239,7 @@ public abstract class Frequency implements IFrequency {
         return FrequencyType.<FREQ>load(dataStream).create(dataStream);
     }
 
-    public record FrequencyIdentity(Object key, boolean isPublic) {
+    public record FrequencyIdentity(Object key, boolean isPublic, boolean isTrusted) {
 
         public static FrequencyIdentity load(FrequencyType<?> type, CompoundTag tag) {
             return type.getIdentitySerializer().load(tag);

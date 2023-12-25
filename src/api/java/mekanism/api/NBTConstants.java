@@ -211,6 +211,7 @@ public final class NBTConstants {
     public static final String TILE_TAG = "tileTag";
     public static final String TIME = "time";
     public static final String TRUSTED = "trusted";
+    public static final String TRUSTED_FREQUENCY = "trustedFreq";
     public static final String TYPE = "type";
     public static final String UPDATE_DELAY = "updateDelay";
     public static final String UPGRADES = "upgrades";

@@ -11,6 +11,7 @@ public class FrequencyManagerWrapper<FREQ extends Frequency> {
     private final FrequencyType<FREQ> frequencyType;
     private FrequencyManager<FREQ> publicManager;
     private Map<UUID, FrequencyManager<FREQ>> privateManagers;
+    private Map<UUID, FrequencyManager<FREQ>> trustedManagers;
 
     private FrequencyManagerWrapper(Type type, FrequencyType<FREQ> frequencyType) {
         this.type = type;
@@ -21,6 +22,9 @@ public class FrequencyManagerWrapper<FREQ extends Frequency> {
         }
         if (type.supportsPrivate()) {
             privateManagers = new Object2ObjectOpenHashMap<>();
+        }
+        if (type.supportsTrusted()) {
+            trustedManagers = new Object2ObjectOpenHashMap<>();
         }
     }
 
@@ -53,9 +57,29 @@ public class FrequencyManagerWrapper<FREQ extends Frequency> {
         });
     }
 
+    public FrequencyManager<FREQ> getTrustedManager(UUID ownerUUID) {
+        if (!type.supportsTrusted()) {
+            Mekanism.logger.error("Attempted to access trusted frequency manager of type {}. This shouldn't happen!", frequencyType.getName());
+            return null;
+        } else if (ownerUUID == null) {
+            Mekanism.logger.error("Attempted to access trusted frequency manager of type {} with no owner. This shouldn't happen!", frequencyType.getName());
+            return null;
+        }
+
+        return trustedManagers.computeIfAbsent(ownerUUID, owner -> {
+            FrequencyManager<FREQ> manager = new FrequencyManager<>(frequencyType, owner);
+            manager.createOrLoad();
+            return manager;
+        });
+    }
+
     public void clear() {
         if (privateManagers != null) {
             privateManagers.clear();
+        }
+
+        if (trustedManagers != null) {
+            trustedManagers.clear();
         }
     }
 
@@ -70,6 +94,9 @@ public class FrequencyManagerWrapper<FREQ extends Frequency> {
 
         boolean supportsPrivate() {
             return this == PRIVATE_ONLY || this == PUBLIC_PRIVATE;
+        }
+        boolean supportsTrusted() {
+            return this == PUBLIC_PRIVATE;
         }
     }
 }

@@ -12,14 +12,14 @@ public interface IdentitySerializer {
     IdentitySerializer NAME = new IdentitySerializer() {
         @Override
         public FrequencyIdentity read(FriendlyByteBuf buf) {
-            return new FrequencyIdentity(BasePacketHandler.readString(buf), buf.readBoolean());
+            return new FrequencyIdentity(BasePacketHandler.readString(buf), buf.readBoolean(), buf.readBoolean());
         }
 
         @Override
         public FrequencyIdentity load(CompoundTag data) {
             String name = data.getString(NBTConstants.NAME);
             if (!name.isEmpty()) {
-                return new FrequencyIdentity(name, data.getBoolean(NBTConstants.PUBLIC_FREQUENCY));
+                return new FrequencyIdentity(name, data.getBoolean(NBTConstants.PUBLIC_FREQUENCY), data.getBoolean(NBTConstants.TRUSTED_FREQUENCY));
             }
             return null;
         }
@@ -28,6 +28,7 @@ public interface IdentitySerializer {
         public void write(FriendlyByteBuf buf, FrequencyIdentity data) {
             buf.writeUtf(data.key().toString());
             buf.writeBoolean(data.isPublic());
+            buf.writeBoolean(data.isTrusted());
         }
 
         @Override
@@ -35,6 +36,7 @@ public interface IdentitySerializer {
             CompoundTag tag = new CompoundTag();
             tag.putString(NBTConstants.NAME, data.key().toString());
             tag.putBoolean(NBTConstants.PUBLIC_FREQUENCY, data.isPublic());
+            tag.putBoolean(NBTConstants.TRUSTED_FREQUENCY, data.isTrusted());
             return tag;
         }
     };
@@ -42,13 +44,13 @@ public interface IdentitySerializer {
     IdentitySerializer UUID = new IdentitySerializer() {
         @Override
         public FrequencyIdentity read(FriendlyByteBuf buf) {
-            return new FrequencyIdentity(buf.readUUID(), buf.readBoolean());
+            return new FrequencyIdentity(buf.readUUID(), buf.readBoolean(), buf.readBoolean());
         }
 
         @Override
         public FrequencyIdentity load(CompoundTag data) {
             if (data.hasUUID(NBTConstants.OWNER_UUID)) {
-                return new FrequencyIdentity(data.getUUID(NBTConstants.OWNER_UUID), data.getBoolean(NBTConstants.PUBLIC_FREQUENCY));
+                return new FrequencyIdentity(data.getUUID(NBTConstants.OWNER_UUID), data.getBoolean(NBTConstants.PUBLIC_FREQUENCY), data.getBoolean(NBTConstants.PUBLIC_FREQUENCY));
             }
             return null;
         }
@@ -57,6 +59,7 @@ public interface IdentitySerializer {
         public void write(FriendlyByteBuf buf, FrequencyIdentity data) {
             buf.writeUUID((UUID) data.key());
             buf.writeBoolean(data.isPublic());
+            buf.writeBoolean(data.isTrusted());
         }
 
         @Override
@@ -64,6 +67,7 @@ public interface IdentitySerializer {
             CompoundTag tag = new CompoundTag();
             tag.putUUID(NBTConstants.OWNER_UUID, (UUID) data.key());
             tag.putBoolean(NBTConstants.PUBLIC_FREQUENCY, data.isPublic());
+            tag.putBoolean(NBTConstants.TRUSTED_FREQUENCY, data.isTrusted());
             return tag;
         }
     };
