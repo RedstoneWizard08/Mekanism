@@ -47,4 +47,8 @@ public interface IFrequencyHandler {
     default <FREQ extends Frequency> List<FREQ> getPrivateCache(FrequencyType<FREQ> type) {
         return getFrequencyComponent().getPrivateCache(type);
     }
+
+    default <FREQ extends Frequency> List<FREQ> getTrustedCache(FrequencyType<FREQ> type) {
+        return getFrequencyComponent().getTrustedCache(type);
+    }
 }

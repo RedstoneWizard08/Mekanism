@@ -187,7 +187,7 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
     }
 
     private List<FREQ> getFrequencies() {
-        return publicFreq ? frequencySelector.getPublicFrequencies() : frequencySelector.getPrivateFrequencies();
+        return publicFreq ? frequencySelector.getPublicFrequencies() : trustedFreq ? frequencySelector.getTrustedFrequencies() : frequencySelector.getPrivateFrequencies();
     }
 
     private void setFrequency() {
@@ -236,6 +236,7 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
         List<FREQ> getPublicFrequencies();
 
         List<FREQ> getPrivateFrequencies();
+        List<FREQ> getTrustedFrequencies();
 
         default void buttonsUpdated() {
         }
@@ -279,6 +280,11 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
         default List<FREQ> getPrivateFrequencies() {
             return getTileEntity().getPrivateCache(getFrequencyType());
         }
+
+        @Override
+        default List<FREQ> getTrustedFrequencies() {
+            return getTileEntity().getTrustedCache(getFrequencyType());
+        }
     }
 
     public interface IItemGuiFrequencySelector<FREQ extends Frequency, CONTAINER extends FrequencyItemContainer<FREQ>> extends IGuiFrequencySelector<FREQ> {
@@ -308,6 +314,11 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
         @Override
         default List<FREQ> getPrivateFrequencies() {
             return getFrequencyContainer().getPrivateCache();
+        }
+
+        @Override
+        default List<FREQ> getTrustedFrequencies() {
+            return getFrequencyContainer().getTrustedCache();
         }
     }
 }

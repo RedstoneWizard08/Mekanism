@@ -16,6 +16,7 @@ public abstract class FrequencyItemContainer<FREQ extends Frequency> extends Mek
 
     private List<FREQ> publicCache = Collections.emptyList();
     private List<FREQ> privateCache = Collections.emptyList();
+    private List<FREQ> trustedCache = Collections.emptyList();
     private FREQ selectedFrequency;
 
     protected FrequencyItemContainer(ContainerTypeRegistryObject<?> type, int id, Inventory inv, InteractionHand hand, ItemStack stack) {
@@ -40,6 +41,10 @@ public abstract class FrequencyItemContainer<FREQ extends Frequency> extends Mek
         return privateCache;
     }
 
+    public List<FREQ> getTrustedCache() {
+        return trustedCache;
+    }
+
     @Override
     protected void addContainerTrackers() {
         super.addContainerTrackers();
@@ -48,6 +53,7 @@ public abstract class FrequencyItemContainer<FREQ extends Frequency> extends Mek
             track(SyncableFrequency.create(this::getFrequency, value -> selectedFrequency = value));
             track(SyncableFrequencyList.create(this::getPublicCache, value -> publicCache = value));
             track(SyncableFrequencyList.create(this::getPrivateCache, value -> privateCache = value));
+            track(SyncableFrequencyList.create(this::getTrustedCache, value -> trustedCache = value));
         } else {
             //Server side sync handling
             //Note: It is important these are in the same order as the client side trackers
@@ -67,6 +73,7 @@ public abstract class FrequencyItemContainer<FREQ extends Frequency> extends Mek
             }, value -> selectedFrequency = value));
             track(SyncableFrequencyList.create(() -> getFrequencyType().getManager(null).getFrequencies(), value -> publicCache = value));
             track(SyncableFrequencyList.create(() -> getFrequencyType().getManager(getPlayerUUID()).getFrequencies(), value -> privateCache = value));
+            track(SyncableFrequencyList.create(() -> getFrequencyType().getManager(getPlayerUUID()).getFrequencies(), value -> trustedCache = value));
         }
     }
 }

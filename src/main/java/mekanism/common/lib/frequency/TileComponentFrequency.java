@@ -27,6 +27,7 @@ public class TileComponentFrequency implements ITileComponent {
 
     private final Map<FrequencyType<?>, List<? extends Frequency>> publicCache = new LinkedHashMap<>();
     private final Map<FrequencyType<?>, List<? extends Frequency>> privateCache = new LinkedHashMap<>();
+    private final Map<FrequencyType<?>, List<? extends Frequency>> trustedCache = new LinkedHashMap<>();
 
     private boolean needsSave;
     private boolean needsNotify;
@@ -92,6 +93,10 @@ public class TileComponentFrequency implements ITileComponent {
 
     public <FREQ extends Frequency> List<FREQ> getPrivateCache(FrequencyType<FREQ> type) {
         return getCache(privateCache, type);
+    }
+
+    public <FREQ extends Frequency> List<FREQ> getTrustedCache(FrequencyType<FREQ> type) {
+        return getCache(trustedCache, type);
     }
 
     private <FREQ extends Frequency> List<FREQ> getCache(Map<FrequencyType<?>, List<? extends Frequency>> cache, FrequencyType<FREQ> type) {
@@ -269,13 +274,16 @@ public class TileComponentFrequency implements ITileComponent {
         if (container.isRemote()) {
             container.track(SyncableFrequencyList.create(() -> getPublicCache(type), value -> publicCache.put(type, value)));
             container.track(SyncableFrequencyList.create(() -> getPrivateCache(type), value -> privateCache.put(type, value)));
+            container.track(SyncableFrequencyList.create(() -> getTrustedCache(type), value -> trustedCache.put(type, value)));
         } else {
             container.track(SyncableFrequencyList.create(() -> type.getManagerWrapper().getPublicManager().getFrequencies(), value -> publicCache.put(type, value)));
             //Note: We take advantage of the fact that containers are one to one even on the server, and sync
             // the private frequencies of the player who opened the container rather than the private
             // frequencies of the owner of the tile
             container.track(SyncableFrequencyList.create(() -> type.getManagerWrapper().getPrivateManager(container.getPlayerUUID()).getFrequencies(),
-                  value -> privateCache.put(type, value)));
+                    value -> privateCache.put(type, value)));
+            container.track(SyncableFrequencyList.create(() -> type.getManagerWrapper().getTrustedManager(container.getPlayerUUID()).getFrequencies(),
+                    value -> trustedCache.put(type, value)));
         }
     }
 
