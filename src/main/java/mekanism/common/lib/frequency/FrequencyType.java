@@ -107,7 +107,7 @@ public class FrequencyType<FREQ extends Frequency> {
     }
 
     public FrequencyManager<FREQ> getManager(FrequencyIdentity identity, UUID owner) {
-        return identity.isPublic() ? getManagerWrapper().getPublicManager() : getManagerWrapper().getPrivateManager(owner);
+        return identity.isPublic() ? getManagerWrapper().getPublicManager() : identity.isTrusted() ? getManagerWrapper().getTrustedManager(owner) : getManagerWrapper().getPrivateManager(owner);
     }
 
     public FREQ getFrequency(FrequencyIdentity identity, UUID owner) {

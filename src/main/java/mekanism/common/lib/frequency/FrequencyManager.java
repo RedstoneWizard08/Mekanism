@@ -132,6 +132,7 @@ public class FrequencyManager<FREQ extends Frequency> {
         return frequencies.computeIfAbsent(identity.key(), key -> {
             FREQ freq = frequencyType.create(key, ownerUUID);
             freq.setPublic(identity.isPublic());
+            freq.setTrusted(identity.isTrusted());
             markDirty();
             return freq;
         });
